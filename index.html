@@ -1538,8 +1538,14 @@
                 audioElement = new Audio('sound/sound.mp3');
                 audioElement.volume = volume;
                 audioElement.loop = true;
+                audioElement.muted = false;
             }
-            audioElement.play().catch(err => console.log('Sound play blocked:', err));
+            const playPromise = audioElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.log('Autoplay blocked, waiting for user interaction...', err);
+                });
+            }
         }
 
         /* Full spiritual opening sequence */
@@ -1944,6 +1950,17 @@
             soundStarted = false; // Reset flag to ensure sound plays on refresh
             setTimeout(() => playOpeningSequence(), 500);
         });
+
+        /* Fallback: Play sound on first user interaction if autoplay was blocked */
+        function resumeAudioOnInteraction() {
+            if (audioElement && audioElement.paused) {
+                audioElement.play().catch(err => console.log('Sound resuming...'));
+            }
+        }
+
+        document.addEventListener('click', resumeAudioOnInteraction, { once: true });
+        document.addEventListener('touchstart', resumeAudioOnInteraction, { once: true });
+        document.addEventListener('keydown', resumeAudioOnInteraction, { once: true });
     </script>
 </body>
 
